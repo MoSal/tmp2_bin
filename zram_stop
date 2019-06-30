@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+n=8
+
+for i in {0..$((n - 1))}; do
+  swapoff /dev/zram${i} &
+done
+
+while pgrep swapoff &>/dev/null; do
+  sleep 1
+done
+
+for i in {0..$((n - 1))}; do
+  echo 1 > /sys/block/zram${i}/reset
+done
+
+modprobe -r zram

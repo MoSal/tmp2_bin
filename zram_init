@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+n=8
+
+modprobe zram num_devices=$n
+
+for i in {0..$((n - 1))}; do
+  echo lz4 > /sys/block/zram${i}/comp_algorithm
+  echo 1G > /sys/block/zram${i}/disksize
+done
+
+sleep 2 # disksize seems to take sometime before it's applied
+
+for i in {0..$((n - 1))}; do
+  mkswap /dev/zram${i}
+  swapon /dev/zram${i} -p 10
+done
