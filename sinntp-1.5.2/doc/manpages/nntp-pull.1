@@ -1,0 +1,68 @@
+'\" t
+.\"     Title: nntp-pull
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/10/2014
+.\"    Manual: nntp-pull manual
+.\"    Source: nntp-pull 1.5.2
+.\"  Language: English
+.\"
+.TH "NNTP\-PULL" "1" "2014-07-10" "nntp-pull 1\&.5\&.2" "nntp-pull manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nntp-pull \- fetch articles from the server to the mbox
+.SH "SYNOPSIS"
+.HP \w'\fBnntp\-pull\fR\ 'u
+\fBnntp\-pull\fR [\fIoptions\fR...] \fIgroupname\fR [\fIgroupname\fR...]
+.SH "DESCRIPTION"
+.PP
+Fetch messages from the server and save them into the mailbox (mbox format)\&. Every argument is supposed to be a name of group, optionally followed by a \*(Aq>\*(Aq character and mbox filename\&. If the mbox filename is omitted, it defaults to the name of the group\&.
+.PP
+Besides global options (described in
+\fBsinntp\fR(1)),
+\fBnntp\-pull\fR
+command takes following options:
+.PP
+\fB\-\-limit=\fR\fB\fIN\fR\fR
+.RS 4
+Pull at most
+\fIN\fR
+messages\&.
+.RE
+.PP
+\fB\-\-reget\fR
+.RS 4
+Start from the first available message\&.
+.RE
+.SH "EXAMPLES"
+.PP
+\fBnntp\-pull \-\-server=news\&.example\&.org \-\-limit=50 \*(Aqcomp\&.os\&.linux>os\-linux\*(Aq\fR
+Fetches at most the 50 newest articles from the newsgroup comp\&.os\&.linux located on news\&.example\&.org server and appends them to the os\-linux mailbox file\&.
+.PP
+\fBnntp\-pull \-\-server=news\&.example\&.net \-\-reget \-\-limit=3 comp\&.os\&.windows\fR
+Fetches at most the 3 oldest articles from the newsgroup comp\&.os\&.windows located on news\&.example\&.net server and appends them to the comp\&.os\&.windows mailbox file\&.
+.SH "SEE ALSO"
+.PP
+\fBsinntp\fR(1)
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2009, 2010, 2011 Piotr Lewandowski, Jakub Wilk
+.br

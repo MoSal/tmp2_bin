@@ -1,0 +1,69 @@
+'\" t
+.\"     Title: nntp-push
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/10/2014
+.\"    Manual: nntp-push manual
+.\"    Source: nntp-push 1.5.2
+.\"  Language: English
+.\"
+.TH "NNTP\-PUSH" "1" "2014-07-10" "nntp-push 1\&.5\&.2" "nntp-push manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nntp-push \- send an article to the server
+.SH "SYNOPSIS"
+.HP \w'\fBnntp\-push\fR\ 'u
+\fBnntp\-push\fR [\fIoptions\fR...] \fInewsgroups\fR...
+.SH "DESCRIPTION"
+.PP
+Read a message in RFC 822 format from the standard input and send it to the server\&. Newsgroups can be specified in two manners:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+as a command\-line arguments,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+in the Newsgroups header of the message\&.
+.RE
+.sp
+The latter method takes precedence over command\-line arguments\&. Read message can be altered by the specified plugins which are described along with global options in
+\fBsinntp\fR(1)\&.
+.SH "SEE ALSO"
+.PP
+\fBsinntp\fR(1)
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2009, 2010, 2011, 2012 Piotr Lewandowski, Jakub Wilk
+.br

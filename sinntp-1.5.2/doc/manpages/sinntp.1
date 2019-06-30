@@ -1,0 +1,284 @@
+'\" t
+.\"     Title: sinntp
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/10/2014
+.\"    Manual: sinntp manual
+.\"    Source: sinntp 1.5.2
+.\"  Language: English
+.\"
+.TH "SINNTP" "1" "2014-07-10" "sinntp 1\&.5\&.2" "sinntp manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+sinntp \- tiny non\-interactive NNTP client
+.SH "SYNOPSIS"
+.HP \w'\fBsinntp\fR\ 'u
+\fBsinntp\fR \fIcommand\fR [\fIoptions\fR...] [\fIargs\fR...]
+.SH "DESCRIPTION"
+.PP
+\fBsinntp\fR
+is a tiny NNTP client originally designed to work in non\-interactive mode\&. Following operations are supported:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+sending articles to the server,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+fetching new articles to the mbox file,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+downloading individual messages in RFC822 format,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+listing available newsgroups\&.
+.RE
+.SH "COMMANDS"
+.PP
+\fBsinntp\fR
+provides following commands:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+get,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+list,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+pull,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+push\&.
+.RE
+.sp
+Above commands may also be invoked via convenience wrappers named in
+\fBnntp\-\fR\fB\fIcommand\fR\fR
+scheme (e\&.g\&.
+\fBnntp\-get\fR)\&. See wrappers\*(Aq manual pages for command synopsis and description\&.
+.SH "GLOBAL OPTIONS"
+.PP
+\fB\-\-version\fR
+.RS 4
+Show program\*(Aqs version number and exit\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Show short help message end exit\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Be more verbose (use multiple times to increase verbosity)\&.
+.RE
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Be less verbose (use multiple times to decrease verbosity)\&.
+.RE
+.PP
+\fB\-p\fR, \fB\-\-plugin=\fR\fB\fIplugin\fR\fR
+.RS 4
+Load and use
+\fIplugin\fR\&.
+.RE
+.PP
+\fB\-S\fR, \fB\-\-server=\fR\fB\fIhost\fR\fR, \fB\-\-server=\fR\fB\fIhost\fR\fR\fB:\fR\fB\fIport\fR\fR
+.RS 4
+Connect to the specified
+\fIhost\fR
+and
+\fIport\fR\&. If omitted
+\fBsinntp\fR
+will use address stored in
+/etc/nntp/server
+file or in
+\fINNTPSERVER\fR
+variable (the latter takes precedence over the former)\&.
+.RE
+.PP
+\fB\-U\fR, \fB\-\-username=\fR\fB\fIusername\fR\fR
+.RS 4
+Use specified
+\fIusername\fR
+for authentication\&.
+.RE
+.PP
+\fB\-P\fR, \fB\-\-password=\fR\fB\fIpassword\fR\fR
+.RS 4
+Use specified
+\fIpassword\fR
+for authentication\&.
+.sp
+Use with caution! The password may be visible to other users of the system\&.
+.RE
+.PP
+\fB\-\-no\-netrc\fR
+.RS 4
+Do not attempt to read authentication credentials (username, password) from the
+~/\&.netrc
+file\&.
+.RE
+.PP
+\fB\-t\fR, \fB\-\-timeout=\fR\fB\fItimeout\fR\fR
+.RS 4
+Wait maximum
+\fItimeout\fR
+seconds during communication with the server\&.
+.RE
+.PP
+Also, a particular command can support additional options\&.
+.SH "PLUGINS"
+.PP
+Pulled and pushed messages can be altered by the plugin mechanism\&. Currently
+\fBsinntp\fR
+package includes following plugins:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBmimify\fR
+\- add default charset to the message when it is not present,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBstrip_headers\fR
+\- strip specified headers from message\&.
+.RE
+.sp
+.SH "ENVIRONMENT VARIABLES"
+.PP
+NNTPSERVER
+.RS 4
+Address of the default NNTP server\&. It can be overridden by
+\fB\-\-server\fR
+option\&.
+.RE
+.PP
+XDG_DATA_HOME
+.RS 4
+Location of sinntp data directory\&. See
+\m[blue]\fBXDG Base Directory Specification\fR\m[]\&\s-2\u[1]\d\s+2
+for details\&.
+.RE
+.SH "FILES"
+.PP
+/etc/news/server
+.RS 4
+A file with NNTP server address\&. Can be overridden by
+\fINNTPSERVER\fR
+environment variable or
+\fB\-\-server\fR
+option\&.
+.RE
+.PP
+\fI$XDG_DATA_HOME\fR/sinntp/
+.RS 4
+Location of sinntp data files\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBnntp-get\fR(1),
+\fBnntp-list\fR(1),
+\fBnntp-push\fR(1),
+\fBnntp-pull\fR(1)
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2009, 2010, 2011, 2012 Piotr Lewandowski, Jakub Wilk
+.br
+.SH "NOTES"
+.IP " 1." 4
+XDG Base Directory Specification
+.RS 4
+\%http://standards.freedesktop.org/basedir-spec/latest/
+.RE
