@@ -1,0 +1,49 @@
+#!/bin/zsh
+
+echo '===================='
+
+rate=0
+count=0
+min=10000000000000000
+max=0
+dur=0
+size=0
+
+for f in $@ ; do 
+  ! [[ -f $f ]] && echo $f is not a file && return 1
+  #frate=`avprobe -of old -show_format $f 2>/dev/null| grep '^bit_rate='| sed 's|bit_rate=||'`
+  #fdur=`avprobe -of old -show_format $f 2>/dev/null| grep '^duration='| sed 's|duration=||'`
+  #fsize=`avprobe -of old -show_format $f 2>/dev/null| grep '^size='| sed 's|size=||'`
+  frate=`ffprobe -show_format $f 2>/dev/null| grep '^bit_rate='| sed 's|bit_rate=||'`
+  fdur=`ffprobe -show_format $f 2>/dev/null| grep '^duration='| sed 's|duration=||'`
+  fsize=`ffprobe -show_format $f 2>/dev/null| grep '^size='| sed 's|size=||'`
+  
+  ! [[ -n $fdur ]] && echo $f is not a multimedia file with duration, skipping && continue
+  ! [[ $fdur > .1 ]] && echo $f duration $fdur is too small!, skipping && continue
+  ! [[ -n $frate ]] && echo $f is not a multimedia file with a bitrate, skipping && continue
+  ! [[ $frate = <-> ]] && echo $f is not a multimedia file or bitrate unknown, skipping && continue
+
+  (( count++  ))
+
+  typeset -i mfdur
+  typeset -iZ2 sfdur
+  (( mfdur=${fdur}/60 ))
+  (( sfdur=${fdur}%60 ))
+  (( frate=${frate}/1000  ))
+  print "${frate:0:7}kbps \t${fdur:0:7}(${mfdur}:${sfdur}) \t$f"
+  [[ $frate -lt $min  ]] && min=$frate
+  [[ $frate -gt $max  ]] && max=$frate
+  (( rate+=$frate ))
+  (( dur+=$fdur ))
+  (( size+=$fsize ))
+done
+
+(( rate=${rate}/${count} )) # Average/track
+(( srate=${size}*8/${dur}/1000 )) # Average/sec with container overhead
+
+(( dur=${dur}/60.0 ))
+(( cds=${dur}/80.0  ))
+
+echo '===================='
+echo "Files:${count}    Average/track:${rate:0:7}kbps  Average/sec:${srate:0:7}kbps    Max:${max:0:7}kbps  Min:${min:0:7}kbps"
+echo "${dur:0:6}m  ${cds:0:6}cdda"

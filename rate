@@ -1,0 +1,27 @@
+#!/bin/zsh
+
+rate=0
+count=0
+min=10000000000000000
+max=0
+dur=0
+size=0
+
+for f in $@ ; do 
+  (( count++  ))
+  frate=`avprobe -of old -show_format $f 2>/dev/null| grep '^bit_rate='| sed 's|bit_rate=||'`
+  fdur=`avprobe -of old -show_format $f 2>/dev/null| grep '^duration='| sed 's|duration=||'`
+  fsize=`avprobe -of old -show_format $f 2>/dev/null| grep '^size='| sed 's|size=||'`
+  (( frate=${frate}/1000  ))
+  echo ${frate:0:7}kb/s $f
+  [[ $frate -lt $min  ]] && min=$frate
+  [[ $frate -gt $max  ]] && max=$frate
+  (( rate+=$frate ))
+  (( dur+=$fdur ))
+  (( size+=$fsize ))
+done
+
+(( rate=${rate}/${count} )) # Average/track
+(( srate=${size}*8/${dur}/1000 )) # Average/sec with container overhead
+
+echo Files:${count} Average/track:${rate:0:7}kb/s Average/sec:${srate:0:7}kb/s Max:${max:0:7}kb/s Min:${min:0:7}kb/s

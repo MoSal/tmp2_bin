@@ -1,0 +1,61 @@
+#!/bin/zsh
+
+if [[ $# != 1 ]]; then
+  echo Wrong no. of args $# != 1 && exit 1
+fi
+
+dir="$1"
+v_exts=(m4v webv)
+
+for v_ext in ${v_exts}; do
+
+  setopt -G
+  for f in "$dir"/*."${v_ext}" ; do
+
+    fb="${f%.*}"
+    fa="${fb}".mka
+    fa2="${fb}".m4a
+    fv="${fb}"."${v_ext}"
+
+    if [[ ! -f "$fa"  ]]; then
+      if [[ -f "$fa2"  ]]; then
+        fa="$fa2"
+      else
+        echo Audio file $fa DNE
+        continue
+      fi
+    fi
+
+    if [[ ! -f "$fv"  ]]; then
+      echo Video file $fv DNE
+      continue
+    fi
+
+    typeset -F sa sv sav
+    sa="`stat -c '%s' ${fa}`"
+    sv="`stat -c '%s' ${fv}`"
+    sav=0
+
+    a_codec_line="$(ffprobe -show_streams "${fa}" 2>/dev/null | grep '^codec_name=')"
+    v_codec_line="$(ffprobe -show_streams "${fv}" 2>/dev/null | grep '^codec_name=')"
+    fav="${fb}"."${(U)v_codec_line#*=}"-"${(U)a_codec_line#*=}".mkv
+
+    echo Running ffmpeg to mux "$fa" and "$fv" into "$fav" ...
+    ffmpeg -i "$fa" -i "$fv" -c copy "$fav"
+
+    if [[ ! -f "$fav"  ]]; then
+      echo New file $fav DNE
+      continue
+    fi
+
+    sav="`stat -c '%s' ${fav}`"
+
+    if (( sav/(sa+sv) < 0.95 )) ; then
+      echo new file seems small "( $sav << $sa+$sv )"
+      continue
+    fi
+
+    rm -fv "$fa" "$fv"
+
+  done
+done

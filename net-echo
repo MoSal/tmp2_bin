@@ -1,0 +1,13 @@
+#!/bin/sh
+
+s="$@"
+s="${s// ;;;/\'}"
+s="${s//;;;/\'}"
+
+cfile="$(expr "$s" : ".*-K'\(.*\)'.*")"
+cfile2=/tmp/${cfile##*/}
+cp $cfile $cfile2
+chmod 664 $cfile2
+s=${s/-K\'$cfile\'/-K\'$cfile2\'}
+
+echo $s >> /tmp/net-echo-get_${USER}_log

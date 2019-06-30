@@ -1,0 +1,19 @@
+#!/usr/bin/zsh
+
+cUID="$UID"
+cUSER="$USER"
+
+# Run in root
+if [[ ! -f "/var/run/netns/$cUSER"  ]]; then
+	sudo /tmp2/bin/veth2_setup $cUID $cUSER
+fi
+
+c=($@)
+for n in {1..${#c}}; do
+  arg=$c[$n]
+  arg="${arg//\"/\\\"}"
+  arg="${arg//\'/'\\\''}"
+  c[$n]=\'${arg}\'
+done
+
+sudo -- su root -c "ip netns exec $cUSER su $cUSER -c \"TORSOCKS_CONF_FILE=/etc/tor/torsocks_${cUSER}.conf ${c}\""

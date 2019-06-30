@@ -1,0 +1,36 @@
+#!/bin/zsh
+
+size=0
+typeset -Z5 intfsize
+
+[[ -z $1  ]] && IFS2=$IFS && IFS=$'\n' && ext=(`find -type f |sort`) && IFS=$IFS2
+[[ -d $1  ]] && IFS2=$IFS && IFS=$'\n' && ext=(`find $1 -type f | sort`) && IFS=$IFS2 && shift
+
+for f in $@ $ext ; do
+	if [[ -f $f ]]; then
+		i=`/bin/ls -sH ${f}`
+		let msize=10#${i%% *}/1024.0
+		intfsize="${msize%.*}"
+		floatfsize="${msize#*.}"
+		ff1="$floatfsize[1]"
+		ff2="$floatfsize[2]"
+		[[ "$floatfsize[3]" -ge 5 ]] && let ff2=10#${ff2}+1
+		[[ "$ff2" -eq 10 ]] && let ff1=10#${ff1}+1 && ff2=0
+		[[ "$ff1" -eq 10 ]] && let intfsize=10#${intfsize}+1 && ff1=0
+		echo "$intfsize"."${ff1}${ff2}"MiB"\t${i#* }"
+		let size=10#${size}+${i%% *}
+	else
+		echo $f is not a file >&2
+	fi
+	done
+
+	let size=10#$size/1024.0
+	intsize="${size%.*}"
+	floatsize="${size#*.}"
+	f1="$floatsize[1]"
+	f2="$floatsize[2]"
+	[[ "$floatsize[3]" -ge 5 ]] && let f2=10#${f2}+1
+	[[ "$f2" -eq 10 ]] && let f1=10#${f1}+1 && f2=0
+	[[ "$f1" -eq 10 ]] && let intsize=10#${intsize}+1 && f1=0
+	[[ -z $f2 ]] && f2=00
+	echo Total size: "$intsize"."${f1}${f2}"MiB

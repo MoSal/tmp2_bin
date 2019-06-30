@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "`date`" >> /tmp/URLS
+echo "  $@" >> /tmp/URLS

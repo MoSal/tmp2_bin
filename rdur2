@@ -1,0 +1,40 @@
+#!/bin/zsh
+
+echo '===================='
+
+rate=0
+count=0
+min=10000000000000000
+max=0
+dur=0
+size=0
+
+for f in $@ ; do 
+  (( count++  ))
+  ! [[ -f $f ]] && echo $f is not a file && return 1
+  #fdur=`avprobe -of old -show_format $f 2>/dev/null| grep '^duration='| sed 's|duration=||'`
+  #fsize=`avprobe -of old -show_format $f 2>/dev/null| grep '^size='| sed 's|size=||'`
+  fdur=`ffprobe -show_format $f 2>/dev/null| grep '^duration='| sed 's|duration=||'`
+  fsize=`ffprobe -show_format $f 2>/dev/null| grep '^size='| sed 's|size=||'`
+  (( frate=${fsize}*8/1000/$fdur ))
+  typeset -i mfdur
+  typeset -iZ2 sfdur
+  (( mfdur=${fdur}/60 ))
+  (( sfdur=${fdur}%60 ))
+  echo "${frate:0:7}kbps  ${fdur:0:7}(${mfdur}:${sfdur})    $f"
+  [[ $frate -lt $min  ]] && min=$frate
+  [[ $frate -gt $max  ]] && max=$frate
+  (( rate+=$frate ))
+  (( dur+=$fdur ))
+  (( size+=$fsize ))
+done
+
+(( rate=${rate}/${count} )) # Average/track
+(( srate=${size}*8/${dur}/1000 )) # Average/sec with container overhead
+
+(( dur=${dur}/60.0 ))
+(( cds=${dur}/80.0  ))
+
+echo '===================='
+echo "Files:${count}    Average/track:${rate:0:7}kbps  Average/sec:${srate:0:7}kbps    Max:${max:0:7}kbps  Min:${min:0:7}kbps"
+echo "${dur:0:6}m  ${cds:0:6}cdda"

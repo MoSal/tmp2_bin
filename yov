@@ -1,0 +1,3 @@
+#!/usr/bin/zsh
+
+veth2 youtube-dl --proxy http://129.50.0.50:9051 $@

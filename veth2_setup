@@ -1,0 +1,47 @@
+#!/usr/bin/zsh
+
+pexec() {
+	#echo "$@" >&2
+	$@
+}
+
+
+cUID="$1"
+cUSER="$2"
+
+ip netns add "$cUSER"
+
+
+(( veth0_n = ${cUID} - 950 ))
+(( veth1_n = ${cUID} - 900 ))
+veth0=veth${veth0_n}
+veth1=veth${veth1_n}
+veth0ip=129.${veth0_n}.0.${veth0_n}
+veth1ip=129.${veth1_n}.0.${veth1_n}
+
+#ip netns exec "$cUSER" ip link set dev lo up
+pexec ip link add $veth0 type veth peer name $veth1
+pexec ip link set $veth1 netns "$cUSER"
+
+pexec ip link set $veth0 up
+pexec ip addr add ${veth0ip}/32 dev $veth0
+pexec ip route add ${veth1ip}/32 dev $veth0
+
+pexec ip netns exec $cUSER ip link set $veth1 up
+pexec ip netns exec $cUSER ip addr add ${veth1ip}/32 dev $veth1
+pexec ip netns exec $cUSER ip route add ${veth0ip}/32 dev $veth1
+
+# Privoxy
+# we force the copy to always have up-to-date config
+pexec cp -f /etc/privoxy/config.ns /etc/privoxy/config.${cUSER}
+pexec sed -i "s|__MASTER_IP__|${veth0ip}|" /etc/privoxy/config.${cUSER}
+pexec chown privoxy:privoxy /etc/privoxy/config.${cUSER}
+pexec privoxy --user privoxy.privoxy /etc/privoxy/config.${cUSER}
+
+# torsocks
+#pexec cp -f /etc/tor/torsocks.conf /etc/tor/torsocks_${cUser}.conf
+#pexec sed -i "s|127.0.0.1|${veth0ip}|" /etc/tor/torsocks_${cUser}.conf
+
+# Socksify
+pexec cp -f /etc/socks.conf /etc/socks_${cUser}.conf
+pexec sed -i "s|129.50.0.50|${veth0ip}|" /etc/socks_${cUser}.conf

@@ -1,0 +1,107 @@
+#!/bin/zsh
+
+AF=
+opts_array=()
+args_array=()
+opts_str="$1"
+shift
+
+while [[ -n ${opts_str}  ]]; do
+       curr_c=${opts_str:0:1}
+       opts_array=(${opts_array[@]} "${curr_c}")
+       opts_str=${opts_str:1}
+done
+
+for c in ${opts_array[@]}; do
+  case "$c" in
+    'a')
+      args_array=(${args_array[@]} --audio-device="alsa/dhdmi" -volume 100);;
+    'b')
+      args_array=(${args_array[@]} --sub-auto=all);;
+    'm')
+      args_array=(${args_array[@]} -audio-channels mono);;
+    'l')
+      args_array=(${args_array[@]} --volume-max 400);;
+    'r')
+      args_array=(${args_array[@]} --input-conf=~/.mpv/input_reverse.conf -loop inf);;
+    'q')
+      args_array=(${args_array[@]} -msg-level 'ffmpeg=fatal,vd=fatal,ad=fatal');;
+    'Q')
+      args_array=(${args_array[@]} -msg-level all=no:statusline=status:demux=info:cplayer=error);;
+    'c')
+      args_array=(${args_array[@]} -cache-secs 25);;
+    'g')
+      args_array=(${args_array[@]} -scale bilinear -cscale bilinear -dscale bilinear);;
+    'G')
+      args_array=(${args_array[@]} -scale bicubic_fast -cscale bicubic_fast -dscale bicubic_fast);;
+    's')
+      args_array=(${args_array[@]} -scale ewa_lanczossharp -cscale ewa_lanczossharp -dscale ewa_lanczossharp);;
+    'h')
+      args_array=(${args_array[@]} --hwdec=no);;
+    'w')
+      args_array=(${args_array[@]} --force-window=immediate);;
+    'f')
+      args_array=(${args_array[@]} -osd-fractions);;
+    'd')
+      AF=1;;
+    *)
+      echo 'Unknown opt.' && exit 1;;
+  esac
+      
+done
+
+args=()
+a_exts=(m4a mka)
+
+for a in $@; do
+  args=($args $a)
+  if ((AF)); then
+    if [[ -f $a  ]]; then
+      for a_ext in ${a_exts[@]}; do
+        case "${a##*.}" in
+          ("sal")
+            try_a="${a%.*.part.sal}"."$a_ext".part.sal
+            if [[ -f $try_a ]]; then
+              args=($args -audio-file "$try_a")
+            else
+              try_a="${a%.*.part.sal}"."$a_ext"
+              if [[ -f $try_a ]]; then
+                args=($args -audio-file "$try_a")
+              fi
+            fi
+            ;;
+          ("part")
+            try_a="${a%.*.part}"."$a_ext".part
+            if [[ -f $try_a ]]; then
+              args=($args -audio-file "$try_a")
+            else
+              try_a="${a%.*.part}"."$a_ext"
+              if [[ -f $try_a ]]; then
+                args=($args -audio-file "$try_a")
+              fi
+            fi
+            ;;
+          (*)
+            try_a="${a%.*}"."$a_ext"
+            if [[ -f $try_a ]]; then
+              args=($args -audio-file "$try_a")
+            else
+              try_a="${a%.*}"."$a_ext".part
+              if [[ -f $try_a ]]; then
+                args=($args -audio-file "$try_a")
+              else
+                try_a="${a%.*}"."$a_ext".part.sal
+                if [[ -f $try_a ]]; then
+                  args=($args -audio-file "$try_a")
+                fi
+              fi
+            fi
+            ;;
+        esac
+      done
+    fi
+  fi
+done
+
+echo mpv ${args_array[@]} $args
+[[ -n $args ]] && mpv ${args_array[@]} $args

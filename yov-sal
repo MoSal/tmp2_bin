@@ -1,0 +1,14 @@
+#!/usr/bin/zsh
+
+#info="$(veth2 youtube-dl --proxy http://129.50.0.50:9051 -f '[protocol!=m3u8][protocol!=m3u8_native]' --get-url --get-filename $@ | egrep -v '(srt|vtt)$')"
+#
+#no_lines="$(echo $info | wc -l)"
+#[[ "${no_lines}" != 2 ]] && echo invalid no. of lines && return 1
+#
+#url="$(echo $info | head -1)"
+#f_name="$(echo $info | tail -1)"
+#
+#veth2 saldl -VVV -x socks5h://129.50.0.50:9050 -e "$1" -nTrma2 "$url" -o "${f_name// /_}"
+
+veth2 bash -c "export SALDL_EXTRA_ARGS='-s1m -c6'; socksify yo-sal $@"
+#veth2 bash -c "export SALDL_EXTRA_ARGS='-s1m -c6'; torsocks -a 129.50.0.50 yo-sal $@"

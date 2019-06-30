@@ -1,0 +1,328 @@
+#!/usr/bin/zsh
+
+echo2() {
+  echo "$@" >&2
+}
+
+if [[ -z "$1" ]]; then
+	echo2 'Options:'
+	echo2 'no-a => NO_AUDIO=1'
+	echo2 'no-v => NO_VIDEO=1'
+	echo2 'no-dash => NO_DASH=1'
+	echo2 'a-no-surround => A_NO_SURROUND=1'
+	echo2 'v-no-vp9 => V_NO_VP9=1'
+	echo2 'v-no-hfr => V_NO_HFR=1'
+	echo2 'v-no-hdr => V_NO_HDR=1'
+	echo2 'v-no-uhd => VIDEO_FMTS=2'
+	echo2 'v-no-1080p => VIDEO_FMTS=3'
+	echo2 'v-no-720p => VIDEO_FMTS=4'
+	echo2 'v-no-480p => VIDEO_FMTS=5'
+	exit 0
+fi
+
+while [[ -n "$1" ]]; do
+	arg=$1
+	shift
+	case $arg in
+		no-a) NO_AUDIO=1 ;;
+		no-v) NO_VIDEO=1 ;;
+		no-dash) NO_DASH=1 ;;
+		v-no-vp9) V_NO_VP9=1 ;;
+		v-no-hfr) V_NO_HFR=1 ;;
+		v-no-hdr) V_NO_HDR=1 ;;
+		v-no-uhd) VIDEO_FMTS=2 ;;
+		v-no-1080p) VIDEO_FMTS=3 ;;
+		v-no-720p) VIDEO_FMTS=4 ;;
+		v-no-480p) VIDEO_FMTS=5 ;;
+		a-no-surround) A_NO_SURROUND=1 ;;
+		*)
+			if [[ "$arg[1,4]" == 'http' ]]; then
+				if [[ -z $URL  ]]; then
+					URL="$arg"
+				else
+					echo2 "URL already set as $URL" && exit 1
+				fi
+			elif [[ "$arg[1,1]" == '/' ]]; then # Assume what follows is youtube video id
+				if [[ -z $URL  ]]; then
+					URL="${arg:1}"
+				else
+					echo2 "URL already set as $URL" && exit 1
+				fi
+			else
+				echo2 "Unrecognized argument $arg" && exit 1
+			fi
+			;;
+	esac
+done
+
+if [[ -z $URL  ]]; then
+	echo2 'No URL in arguments.' && exit 1
+fi
+
+mkdir -p /tmp/YT
+
+T_FILE="`mktemp -u "/tmp/YT/XXXX.json"`"
+
+echo2 Fetching JSON file...
+youtube-dl --no-playlist --skip-download -j "$URL" >  "$T_FILE"
+
+# -----------
+
+echo2 "Get title and id..."
+TITLE="$(youtube-dl --load-info $T_FILE -e)"
+TITLE="${TITLE//$'\n'/}" # Remove possible occurrences of a newline
+ID="$(youtube-dl --load-info $T_FILE --get-id)"
+
+[[ -z "$TITLE"  ]] && echo2 empty title && exit 1
+
+echo2 "Title: $TITLE"
+
+# -----------
+
+echo2 Getting formats...
+
+f_FULL="$(youtube-dl --load-info $T_FILE -F)"
+f_IDs="$(echo ${f_FULL} | sed 's|\([0-9]*\) .*|\1|')"
+
+
+# -----------
+
+AV_ID=
+A_ID=
+V_ID=
+
+# -----------
+
+if [[ $NO_DASH == 1  ]]; then
+  echo2 Choosing non-DASH A/V format...
+	[[ -z $AV_ID  ]] && AV_ID=$(echo $f_IDs| grep '^22$' | tail -1)
+	[[ -z $AV_ID  ]] && AV_ID=$(echo $f_IDs| grep '^18$' | tail -1)
+	[[ -z $AV_ID  ]] && AV_ID=$(echo $f_IDs| grep '^5$' | tail -1)
+	[[ -z $AV_ID  ]] && AV_ID=$(echo $f_IDs| grep '^36$' | tail -1)
+	[[ -z $AV_ID  ]] && AV_ID=$(echo $f_IDs| grep '^17$' | tail -1)
+
+	[[ ${AV_ID} == 22 ]] && AV_EXT=mp4
+	[[ ${AV_ID} == 18 ]] && AV_EXT=mp4
+	[[ ${AV_ID} == 5 ]] && AV_EXT=flv
+	[[ ${AV_ID} == 36 ]] && AV_EXT=mp4
+	[[ ${AV_ID} == 17 ]] && AV_EXT=mp4
+
+	[[ -z $AV_ID  ]] && echo2 no suitable A/V format found. && exit 1
+
+	echo2 A/V Format:
+	echo $f_FULL | grep "^$AV_ID\b" | tail -1 >&2
+fi
+
+if [[ $NO_DASH != 1 && $NO_AUDIO != 1  ]]; then
+
+	echo2 Choosing audio DASH format...
+
+  if ! ((A_NO_SURROUND)); then
+    [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^328$' | tail -1) # EC-3
+    [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^325$' | tail -1) # DTSe
+    [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^258$' | tail -1) # AAC
+    [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^256$' | tail -1) # AAC
+	fi
+  [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^251$' | tail -1) # Opus/WebM
+  [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^141$' | tail -1) # AAC / discontinued
+  [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^172$' | tail -1) # Vorbis / discontinued
+	[[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^140$' | tail -1)
+	[[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^171$' | tail -1)
+  [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^250$' | tail -1) # Opus/WebM
+  # LFi
+  [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^249$' | tail -1) # Opus/WebM
+  [[ -z $A_ID  ]] && A_ID=$(echo $f_IDs| grep '^139$' | tail -1) # discontinued
+
+	[[ ${A_ID:0:2} == 14 ]] && A_EXT=m4a
+	[[ ${A_ID:0:2} == 32 ]] && A_EXT=m4a
+	[[ ${A_ID:0:2} == 13 ]] && A_EXT=m4a
+	[[ ${A_ID:0:2} == 17 ]] && A_EXT=mka
+	[[ ${A_ID:0:2} == 24 ]] && A_EXT=mka
+	[[ ${A_ID:0:3} == 250 ]] && A_EXT=mka
+	[[ ${A_ID:0:3} == 251 ]] && A_EXT=mka
+	[[ ${A_ID:0:3} == 256 ]] && A_EXT=m4a
+	[[ ${A_ID:0:3} == 258 ]] && A_EXT=m4a
+
+	[[ -z $A_ID  ]] && echo2 no suitable audio format found. && exit 1
+
+	echo2 Audio Format:
+	echo $f_FULL | grep "^$A_ID\b" | tail -1 >&2
+
+fi
+
+# -----------
+
+if [[ $NO_DASH != 1 && $NO_VIDEO != 1  ]]; then
+
+	echo2 Choosing video DASH format...
+
+	# If unset, set default
+	VIDEO_FMTS=${VIDEO_FMTS:=1}
+
+	case "${VIDEO_FMTS}" in
+		1)
+      # 4320p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^272$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^138$' | tail -1)
+
+      # 2160p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^337$' | tail -1)
+      fi
+
+      # 2160p / hfr
+      if ! ((V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^315$' | tail -1)
+      fi
+
+			# 2160p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^313$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^138$' | tail -1)
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^266$' | tail -1)
+
+      # 1440p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^336$' | tail -1)
+      fi
+
+			# 1440p / hfr
+      if ! ((V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^308$' | tail -1)
+      fi
+
+			# 1440p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^271$' | tail -1)
+      fi
+      [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^264$' | tail -1)
+			;&
+		2)
+			# 1080p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^335$' | tail -1)
+      fi
+
+			# 1080p / hfr
+      if ! ((V_NO_HFR)); then
+        if ! ((V_NO_VP9)); then
+          [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^303$' | tail -1)
+        fi
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^299$' | tail -1)
+      fi
+
+			# 1080p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^248$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^137$' | tail -1)
+			;&
+		3)
+			# 720p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^334$' | tail -1)
+      fi
+
+			# 720p / hfr
+      if ! ((V_NO_HFR)); then
+        if ! ((V_NO_VP9)); then
+          [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^302$' | tail -1)
+        fi
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^298$' | tail -1)
+      fi
+
+			# 720p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^247$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^136$' | tail -1)
+			;&
+		4)
+			# 480p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^333$' | tail -1)
+      fi
+
+			# 480p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^244$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^135$' | tail -1)
+			;&
+		5)
+			# 360p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^332$' | tail -1)
+      fi
+
+			# 360p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^243$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^134$' | tail -1)
+
+			# 240p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^331$' | tail -1)
+      fi
+
+			# 240p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^242$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^133$' | tail -1)
+
+			# 144p / hfr / hdr
+      if ! ((V_NO_HDR || V_NO_HFR || V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^330$' | tail -1)
+      fi
+
+			# 144p
+      if ! ((V_NO_VP9)); then
+        [[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^278$' | tail -1)
+      fi
+			[[ -z $V_ID  ]] && V_ID=$(echo $f_IDs| grep '^160$' | tail -1)
+			;;
+		*)
+			echo2 Invalid "'VIDEO_FMTS=${VIDEO_FMTS}'" && exit 1
+	esac
+
+	[[ ${V_ID:0:2} == 33 ]] && V_EXT=webv
+	[[ ${V_ID:0:2} == 31 ]] && V_EXT=webv
+	[[ ${V_ID:0:2} == 30 ]] && V_EXT=webv
+	[[ ${V_ID:0:2} == 24 ]] && V_EXT=webv
+	[[ ${V_ID:0:2} == 27 ]] && V_EXT=webv
+	[[ ${V_ID:0:2} == 29 ]] && V_EXT=m4v
+	[[ ${V_ID:0:2} == 26 ]] && V_EXT=m4v
+	[[ ${V_ID:0:2} == 16 ]] && V_EXT=m4v
+	[[ ${V_ID:0:2} == 13 ]] && V_EXT=m4v
+
+	[[ -z $V_ID  ]] && echo2 no suitable video format found. && exit 1
+
+	echo2 Video Format:
+	echo $f_FULL | grep "^$V_ID\b" | tail -1 >&2
+
+fi
+
+# -----------
+
+if [[ $NO_DASH != 1 && $NO_AUDIO != 1  ]]; then
+	A_URL="$(youtube-dl -g -f ${A_ID} --load-info $T_FILE)"
+	echo2 "Download audio..."
+	saldl -VVV -e "$URL" -nTrma2 "$A_URL" -o "${TITLE// /_}.${ID}.${A_EXT}"
+fi
+
+if [[ $NO_DASH != 1 && $NO_VIDEO != 1  ]]; then
+	V_URL="$(youtube-dl -g -f ${V_ID} --load-info $T_FILE)"
+	echo2 "Download video..."
+	saldl -VVV -e "$URL" -nTrma2 -s2m "$V_URL" -o "${TITLE// /_}.${ID}.${V_EXT}"
+fi
+
+if [[ $NO_DASH == 1 ]]; then
+	AV_URL="$(youtube-dl -g -f ${AV_ID} --load-info $T_FILE)"
+	echo2 "Download A/V file..."
+	saldl -VVV -e "$URL" -nTrma2 -s2m "$AV_URL" -o "${TITLE// /_}.${ID}.${AV_EXT}"
+fi
