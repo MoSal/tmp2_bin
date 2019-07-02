@@ -1,0 +1,11 @@
+#!/bin/zsh
+
+l="$(bwm-ng -o csv -c 1 -t 2000 -I $1 | grep $1)"
+
+i=`echo $l | awk -F';' '{print $4}'`
+o=`echo $l | awk -F';' '{print $3}'`
+
+(( i/=1024.0  ))
+(( o/=1024.0  ))
+
+echo ${i:0:5}K/s ${o:0:5}K/s
