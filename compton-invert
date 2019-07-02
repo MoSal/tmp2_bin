@@ -1,0 +1,11 @@
+#!/bin/zsh
+
+if pgrep '^compton$' &>/dev/null; then
+  killall compton
+else
+  #compton --backend glx --glx-fshader-win "$(cat /tmp2/comptopn_glsl/matrix_halfs.glsl)" --force-win-blend --invert-color-include "id!=0" &>/dev/null &!
+  #compton --backend glx --glx-fshader-win "$(cat /tmp2/comptopn_glsl/matrix_thirds.glsl)" --force-win-blend --invert-color-include "id!=0" &>/dev/null &!
+  compton --backend glx --glx-fshader-win "$(cat /tmp2/comptopn_glsl/custom.glsl)" --force-win-blend --invert-color-include "id!=0" &>/dev/null &!
+  #compton --backend glx --glx-fshader-win "$(cat /tmp2/comptopn_glsl/shift.glsl)" --force-win-blend --invert-color-include "id!=0" &>/dev/null &!
+  #compton --backend glx --glx-fshader-win "$(cat /tmp2/comptopn_glsl/shift_whiteish.glsl)" --force-win-blend --invert-color-include "id!=0" &>/dev/null &!
+fi
